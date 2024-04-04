@@ -4,4 +4,6 @@
 이미지 딥러닝을 위해 YOLOv5,  음성 분석 딥러닝을 위해 MFCC 알고리즘을 사용하였습니다. <br>
 개발 환경은 딥러닝 학습은 Google Colab 에서, 메인 코드 실행은 Pycharm, <br>구동부 제어를 위해 Arduino IDE를 사용하였습니다.<br>
 각 코드와 최종 보고서 첨부합니다.<br> <br>
-실제 동작 영상 링크 :: https://youtu.be/hUXsNtIZoiM
+실제 동작 영상 링크 :: https://youtu.be/hUXsNtIZoiM <br><br>
+
+![작품사진](https://github.com/YuNyuk/Automatic-recycling-waste-sorter-using-deep-learning/assets/142381053/cd9a3d2a-465b-4e10-8485-f63ff06be0ad)
