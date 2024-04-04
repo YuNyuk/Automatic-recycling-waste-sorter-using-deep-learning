@@ -9,6 +9,7 @@ import numpy as np
 import wave
 import librosa
 import threading
+import time
 
 # 아두이노와 연결된 시리얼 포트 설정 (적절한 포트 이름으로 변경하세요)
 arduino_port = 'COM8'
@@ -18,7 +19,7 @@ ser = serial.Serial(arduino_port, 9600)
 
 # 모델을 로드할 때 이미 로드 되어 있는지 확인 하고, 없는 경우에만 로드 합니다.
 if 'model' not in locals():
-    model = load_model('C:/Users/hsw03/PycharmProjects/capstonedata_cnn_model/mfcc_model')
+    model = load_model('C:/Users/hsw03/PycharmProjects/capstonedata_cnn_model/mfcc_model2')
 
 CHUNK = 1024
 FORMAT = pyaudio.paInt16
@@ -28,7 +29,7 @@ RATE = 44100
 p = pyaudio.PyAudio()
 
 # 모델 파일의 경로 설정 (적절한 경로로 변경하세요)
-model_path = 'runs/train/exp1/weights/best.pt'
+model_path = 'runs/train/exp2/weights/best.pt'
 
 # YOLOv5 모델을 초기화합니다.
 yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path)
@@ -41,8 +42,12 @@ class_colors = [(random.randint(0, 255), random.randint(0, 255), random.randint(
 cap = cv2.VideoCapture(0)
 
 # 객체 감지를 수행하는 함수
+
+
 def object_detection():
     last_send_time = 0
+    object_detected_time = 0
+    detection_triggered = False  # 객체 감지 트리거 변수
 
     while True:
         ret, frame = cap.read()
@@ -56,8 +61,14 @@ def object_detection():
         # 현재 시간을 가져옵니다.
         current_time = cv2.getTickCount() / cv2.getTickFrequency()
 
-        # 13초마다 한 번씩 데이터를 아두이노로 전송합니다.
-        if current_time - last_send_time >= 10:
+        if ser.inWaiting() > 0:
+            arduino_data = ser.readline().decode('utf-8').strip()
+            if arduino_data == "Object Detected" and not detection_triggered:
+                object_detected_time = time.time() + 2.3  # 적외선 센서가 물체를 감지한 시간 기록 + 2.2초
+                print("물체 감지됨, 1초 후에 객체인식 시작")
+                detection_triggered = True  # 객체 감지 트리거 활성화
+
+        if detection_triggered and time.time() >= object_detected_time:
             for detection in results.pred[0]:
                 class_id = int(detection[-1].item())  # 클래스 ID를 추출합니다.
                 class_name = yolo_model.names[class_id]  # 클래스명을 가져옵니다.
@@ -81,9 +92,11 @@ def object_detection():
                 # 클래스명과 신뢰도를 아두이노로 전송합니다.
                 data = f"Class: {class_name}, Confidence: {confidence}\n"
                 ser.write(data.encode())  # 데이터를 아두이노로 전송합니다.
-                last_send_time = current_time  # 마지막 전송 시간 업데이트
 
-        # 결과를 화면에 출력하거나 다른 후속 작업을 수행합니다.
+                # 결과를 화면에 출력하거나 다른 후속 작업을 수행합니다.
+                detection_triggered = False  # 객체 감지가 수행된 후 트리거 비활성화
+
+            # 결과를 화면에 출력하거나 다른 후속 작업을 수행합니다.
         cv2.imshow("YOLOv5 Object Detection", frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -92,7 +105,12 @@ def object_detection():
     cap.release()
     cv2.destroyAllWindows()
 
-# 오디오 분류를 수행하는 함수
+
+
+
+
+
+
 # 오디오 분류를 수행하는 함수
 def audio_classification():
     while True:
@@ -185,3 +203,6 @@ if __name__ == "__main__":
     # 스레드 종료 대기
     object_detection_thread.join()
     audio_classification_thread.join()
+
+
+
