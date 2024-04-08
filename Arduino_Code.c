@@ -44,12 +44,12 @@ void loop() {
         if (objectClass == "Glass") {
           // Plastic 클래스일 때 서보 모터 각도 변경
           servo1.write(130); // 130도(왼쪽)로 변경
-          delay(3000); // 각도 변경 후 일정 시간 유지 (1초)
+          delay(3000); // 각도 변경 후 일정 시간 유지 (3초)
           servo1.write(78); // 초기 위치로 복귀
         } else if (objectClass == "Can" || objectClass == "Plastic") {
           // Can 클래스 또는 Glass 클래스일 때 서보 모터 각도 변경
           servo1.write(20); // 20도(오른쪽)로 변경
-          delay(3000); // 각도 변경 후 일정 시간 유지 (1초)
+          delay(3000); // 각도 변경 후 일정 시간 유지 (3초)
           servo1.write(78); // 초기 위치로 복귀
         } else {
           // 다른 클래스일 때 서보 모터는 아무 동작도 하지 않음
@@ -59,14 +59,14 @@ void loop() {
         delay(1000);
 
         if (objectClass == "Can" && confidence >= 0.7) {
-        // Plastic 클래스이고, Confidence가 0.8 이상일 때 서보 모터 각도 변경
+        // Plastic 클래스이고, Confidence가 0.7 이상일 때 서보 모터 각도 변경
         servo2.write(130); // 130도(왼쪽)로 변경
-        delay(3000); // 각도 변경 후 일정 시간 유지 (1초)
+        delay(3000); // 각도 변경 후 일정 시간 유지 (3초)
         servo2.write(85); // 초기 위치로 복귀
       } else if (objectClass == "Plastic" && confidence >= 0.7) {
-        // Can 클래스 또는 Glass 클래스이고, Confidence가 0.8 이상일 때 서보 모터 각도 변경
+        // Can 클래스 또는 Glass 클래스이고, Confidence가 0.7 이상일 때 서보 모터 각도 변경
         servo2.write(20); // 20도(오른쪽)로 변경
-        delay(3000); // 각도 변경 후 일정 시간 유지 (1초)
+        delay(3000); // 각도 변경 후 일정 시간 유지 (3초)
         servo2.write(85); // 초기 위치로 복귀
       } else {
         // 위 조건을 만족하지 않을 때 서보 모터는 아무 동작도 하지 않음
