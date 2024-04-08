@@ -11,13 +11,13 @@ import librosa
 import threading
 import time
 
-# 아두이노와 연결된 시리얼 포트 설정 (적절한 포트 이름으로 변경하세요)
+# 아두이노와 연결된 시리얼 포트 설정 (적절한 포트 이름으로 설정)
 arduino_port = 'COM8'
 
-# 시리얼 통신을 열고 아두이노와 연결합니다.
+# 시리얼 통신을 열고 아두이노와 연결
 ser = serial.Serial(arduino_port, 9600)
 
-# 모델을 로드할 때 이미 로드 되어 있는지 확인 하고, 없는 경우에만 로드 합니다.
+# 모델을 로드할 때 이미 로드 되어 있는지 확인 하고, 없는 경우에만 로드
 if 'model' not in locals():
     model = load_model('C:/Users/hsw03/PycharmProjects/capstonedata_cnn_model/mfcc_model2')
 
@@ -28,17 +28,17 @@ RATE = 44100
 
 p = pyaudio.PyAudio()
 
-# 모델 파일의 경로 설정 (적절한 경로로 변경하세요)
+# 모델 파일의 경로 설정 (적절한 경로로 변경)
 model_path = 'runs/train/exp2/weights/best.pt'
 
-# YOLOv5 모델을 초기화합니다.
+# YOLOv5 모델을 초기화
 yolo_model = torch.hub.load('ultralytics/yolov5', 'custom', path=model_path)
 
-# 클래스별 랜덤 색상을 생성합니다.
+# 클래스별 랜덤 색상을 생성
 num_classes = len(yolo_model.names)
 class_colors = [(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)) for _ in range(num_classes)]
 
-# 웹캠 비디오 스트림을 캡처합니다.
+# 웹캠 비디오 스트림을 캡처
 cap = cv2.VideoCapture(0)
 
 # 객체 감지를 수행하는 함수
@@ -55,7 +55,7 @@ def object_detection():
         if not ret:
             break
 
-        # 프레임을 YOLOv5 모델에 전달하여 객체 감지를 수행합니다.
+        # 프레임을 YOLOv5 모델에 전달하여 객체 감지를 수행
         results = yolo_model(frame)
 
         # 현재 시간을 가져옵니다.
@@ -64,39 +64,39 @@ def object_detection():
         if ser.inWaiting() > 0:
             arduino_data = ser.readline().decode('utf-8').strip()
             if arduino_data == "Object Detected" and not detection_triggered:
-                object_detected_time = time.time() + 2.3  # 적외선 센서가 물체를 감지한 시간 기록 + 2.2초
+                object_detected_time = time.time() + 2.3  # 적외선 센서가 물체를 감지한 시간 기록 + 2.3초
                 print("물체 감지됨, 1초 후에 객체인식 시작")
                 detection_triggered = True  # 객체 감지 트리거 활성화
 
         if detection_triggered and time.time() >= object_detected_time:
             for detection in results.pred[0]:
-                class_id = int(detection[-1].item())  # 클래스 ID를 추출합니다.
-                class_name = yolo_model.names[class_id]  # 클래스명을 가져옵니다.
-                confidence = detection[4].item()  # 신뢰도(확률)를 추출합니다.
+                class_id = int(detection[-1].item())  # 클래스 ID를 추출
+                class_name = yolo_model.names[class_id]  # 클래스명을 가져옴
+                confidence = detection[4].item()  # 신뢰도(확률)를 추출
 
-                # 객체 감지 박스의 좌표를 추출합니다.
+                # 객체 감지 박스의 좌표를 추출
                 bbox = detection[:4].tolist()
                 x1, y1, x2, y2 = map(int, bbox)
 
-                # 클래스별 랜덤 색상을 사용하여 객체 감지 박스를 그립니다.
+                # 클래스별 랜덤 색상을 사용하여 객체 감지 박스를 그림림
                 color = class_colors[class_id]
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
 
-                # 클래스명과 신뢰도를 화면에 출력합니다.
+                # 클래스명과 신뢰도를 화면에 출력
                 label = f"{class_name}: {confidence:.2f}"
                 cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
-                # 클래스명과 신뢰도를 노트북 화면에 출력하거나 다른 작업을 수행합니다.
+                # 클래스명과 신뢰도를 노트북 화면에 출력하거나 다른 작업을 수행
                 print(f"Class: {class_name}, Confidence: {confidence}")
 
-                # 클래스명과 신뢰도를 아두이노로 전송합니다.
+                # 클래스명과 신뢰도를 아두이노로 전송
                 data = f"Class: {class_name}, Confidence: {confidence}\n"
-                ser.write(data.encode())  # 데이터를 아두이노로 전송합니다.
+                ser.write(data.encode())  # 데이터를 아두이노로 전송
 
-                # 결과를 화면에 출력하거나 다른 후속 작업을 수행합니다.
+                # 결과를 화면에 출력하거나 다른 후속 작업을 수행
                 detection_triggered = False  # 객체 감지가 수행된 후 트리거 비활성화
 
-            # 결과를 화면에 출력하거나 다른 후속 작업을 수행합니다.
+            # 결과를 화면에 출력하거나 다른 후속 작업을 수행
         cv2.imshow("YOLOv5 Object Detection", frame)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
